@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hormigas vs Comida — MVP</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+      }
+      .panel {
+        padding: 16px;
+        border-right: 1px solid #334155;
+        background: #111827;
+      }
+      h1 { font-size: 1.1rem; margin-top: 0; }
+      p { font-size: 0.9rem; color: #cbd5e1; }
+      .stat { margin: 10px 0; font-size: 0.9rem; }
+      button {
+        width: 100%;
+        margin: 6px 0;
+        padding: 10px;
+        background: #2563eb;
+        border: none;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button.secondary { background: #334155; }
+      canvas {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+      .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <aside class="panel">
+        <h1>Hormigas vs Comida (MVP)</h1>
+        <p>Objetivo: generar clips virales probando escenarios.</p>
+
+        <div class="stat">🐜 Hormigas: <strong id="antCount">60</strong></div>
+        <div class="stat">🍽️ Comida en mapa: <strong id="foodCount">0</strong></div>
+        <div class="stat">🏠 Comida entregada: <strong id="score">0</strong></div>
+
+        <button id="spawnFood">Agregar 30 comidas</button>
+        <button class="secondary" id="toggle">Pausar</button>
+        <button class="secondary" id="reset">Reiniciar</button>
+
+        <p class="hint">Tip de contenido: graba “¿qué pasa si agrego 300 comidas?”</p>
+      </aside>
+      <canvas id="world"></canvas>
+    </div>
+
+    <script src="simulation.js"></script>
+  </body>
+</html>
