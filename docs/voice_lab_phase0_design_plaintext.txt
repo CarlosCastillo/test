@@ -1,0 +1,190 @@
+Voice Lab - Fase 0 (Diseno Tecnico en texto plano)
+
+1. Arquitectura recomendada del programa
+
+Arquitectura propuesta: monolito modular (backend + UI ligera), centrado en un solo motor de sintesis en MVP (Coqui XTTS v2) y preparado para enchufar motores futuros via interfaces.
+
+Capas:
+- UI/Application Layer:
+  - Crear voz
+  - Importar audios de referencia
+  - Generar preview
+  - Gestionar metadatos
+  - Exportar/importar voice packs
+- Domain Layer (nucleo de negocio):
+  - Entidades: VoiceProfile, VoiceReference, VoicePreview, VoicePackManifest
+  - Casos de uso: CreateVoice, GeneratePreview, ExportVoicePack, ImportVoicePack, UpdateMetadata
+- Engine Adapter Layer:
+  - Interfaz comun: TtsEngineAdapter
+  - Implementacion MVP: XttsV2Adapter
+  - Placeholder futuro: OpenVoiceStyleAdapter, PiperTrainingAdapter
+- Infrastructure Layer:
+  - Almacenamiento local (SQLite + filesystem)
+  - Gestion de archivos (copias, checksums, rutas)
+  - Reproductor de audio para previews
+  - Empaquetado/desempaquetado (.voicepack)
+
+2. Stack tecnico propuesto
+
+Opcion recomendada para MVP local:
+- Backend/API: Python 3.11 + FastAPI
+- Motor TTS: Coqui TTS (XTTS v2)
+- Persistencia: SQLite (SQLModel o SQLAlchemy)
+- Procesado audio: ffmpeg + soundfile/librosa (solo tareas necesarias)
+- UI: escritorio web local con React + Vite (o UI minima con plantillas)
+- Empaquetado: zipfile estandar (.voicepack)
+
+Por que este stack:
+- XTTS v2 esta mejor integrado en ecosistema Python.
+- Permite iterar rapido sin acoplarse a tu programa TTS principal.
+- SQLite simplifica libreria local (sin servidor externo).
+
+3. Como integrar XTTS v2 en el proyecto
+
+Flujo minimo de inferencia:
+1) Usuario crea voz (name, language, etc.)
+2) Sube 1..N audios de referencia (wav/mp3/flac)
+3) El sistema normaliza/valida audio (duracion, sample rate, ruido basico)
+4) XttsV2Adapter recibe:
+   - texto de prueba
+   - idioma
+   - lista de referencias
+   - parametros basicos (temperature/top-k/top-p/speed si aplica)
+5) Genera preview (.wav) y lo guarda en storage/previews/...
+6) Guarda metadatos de la voz y rutas de assets en DB
+
+Contrato de adaptador:
+- load_model()
+- synthesize_preview(text, language, reference_files, params) -> preview_path
+- validate_references(files) -> report
+- get_capabilities() -> {supports_style_transfer: false, supports_training: false, ...}
+
+Con esto luego puedes enchufar OpenVoice o Piper sin romper los casos de uso del MVP.
+
+4. Formato propuesto del voice pack
+
+Extension sugerida: .voicepack (zip).
+
+Estructura:
+my_voice.voicepack
+- manifest.json
+- metadata.json
+- references/
+  - ref_01.wav
+  - ref_02.wav
+- previews/
+  - default_preview.wav
+- config/
+  - default_params.json
+
+manifest.json minimo:
+- pack_format_version (ejemplo: 1.0.0)
+- voice_id
+- display_name
+- engine (coqui_xtts_v2)
+- created_at
+- files (lista con hash SHA256 opcional)
+- compatibility (version minima de Voice Lab / TTS host)
+
+metadata.json (campos funcionales):
+- id
+- name
+- description
+- voice_type (character, narrator, custom, etc.)
+- primary_language
+- tags[]
+- created_at
+- reference_files[]
+- preview_file
+- default_params
+- engine_assets (rutas internas del pack)
+
+Regla de compatibilidad futura (para integrar con tu TTS principal):
+- source = "voice_lab"
+- engine_family = "xtts"
+- engine_version_range
+
+Asi tu TTS principal podra mostrar voces de catalogo y voces de voice packs como dos fuentes separadas.
+
+5. Fases concretas de desarrollo
+
+Fase 0 (actual):
+- Diseno tecnico
+- Definir arquitectura
+- Definir formato de pack
+- Delimitar alcance realista del MVP
+
+Fase 1 (MVP funcional con XTTS v2):
+- Crear registro de voz en libreria
+- Importar uno o varios audios de referencia
+- Generar preview usando XTTS v2
+- Guardar voz como entrada de libreria
+- Exportar/importar voice packs
+- Reproducir previews
+- Administrar metadatos basicos
+
+Fase 2 (mejor libreria y flujo):
+- Edicion de metadata
+- Organizacion por categorias/etiquetas
+- Busqueda y filtrado
+- Mejores previews
+- Mejor exportacion/importacion
+
+Fase 3 (estilizacion y variantes):
+- Integrar capa de estilos (robot, futurista, alien, sintetica, etc.)
+- Ruta sugerida para evaluar: OpenVoice
+- No implementarlo todavia en el MVP inicial
+
+Fase 4 (voces serias/entrenamiento):
+- Evaluar entrenamiento/fine-tuning serio
+- Exportacion robusta para voces propias
+- Ruta a evaluar: Piper u otra via local
+
+6. Limites reales del MVP
+
+Lo que si se puede hacer bien en local con XTTS v2:
+- Clonado ligero de voz por referencia (imitacion aproximada)
+- Previews rapidos con 1-3 referencias limpias
+- Gestion de libreria local + metadatos
+- Export/import de packs reutilizables
+
+Lo experimental o de calidad variable:
+- Clonado exacto de identidad vocal (no garantizado)
+- Robustez con audios ruidosos o muy cortos
+- Consistencia total entre frases largas
+
+Recursos y rendimiento:
+- GPU recomendada para flujo fluido (NVIDIA CUDA)
+- En CPU funciona, pero puede ser lento para iteracion diaria
+- Mas VRAM mejora experiencia para generacion repetida
+
+Cuellos de botella reales:
+- Tiempo de inferencia sin GPU
+- Dependencias torch/CUDA
+- Calidad del audio de referencia (si es pobre, resultado pobre)
+
+7. Recomendacion de primera version funcional
+
+Primera version recomendada en 2-3 iteraciones cortas:
+
+Iteracion A:
+- CRUD basico de voces
+- Carga de referencias
+- Persistencia en SQLite
+
+Iteracion B:
+- Generacion de preview con XTTS v2
+- Reproduccion de preview
+- Guardado de parametros por defecto
+
+Iteracion C:
+- Export/import .voicepack
+- Validacion de manifest
+- Manejo de errores y logs
+
+Criterio de MVP listo:
+- Puedes crear una voz, generar preview, guardarla, exportarla, reimportarla y volver a sintetizar sin tocar tu TTS principal.
+
+Nota de alcance:
+- No se avanza todavia a implementacion de codigo en esta entrega.
+- Esta entrega es solo diseno tecnico en formato legible y facil de copiar.

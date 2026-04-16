@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voice Lab - Iteración A</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 1100px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    input, textarea, select { width: 100%; margin-top: .3rem; margin-bottom: .8rem; }
+    .card { border: 1px solid #ddd; padding: 1rem; border-radius: .5rem; margin-bottom: .7rem; }
+  </style>
+</head>
+<body>
+  <h1>Voice Lab - Iteración A</h1>
+  <p>CRUD de voces, referencias y voice packs (sin generación XTTS todavía).</p>
+
+  <div class="grid">
+    <section>
+      <h2>Crear voz</h2>
+      <form action="/voices" method="post">
+        <label>Nombre</label>
+        <input name="name" required />
+
+        <label>Descripción</label>
+        <textarea name="description"></textarea>
+
+        <label>Tipo de voz</label>
+        <select name="voice_type">
+          <option value="custom">custom</option>
+          <option value="character">character</option>
+          <option value="narrator">narrator</option>
+        </select>
+
+        <label>Idioma principal</label>
+        <input name="primary_language" value="es" />
+
+        <label>Etiquetas (coma separadas)</label>
+        <input name="tags" placeholder="heroe, profundo, masculino" />
+
+        <button type="submit">Crear voz</button>
+      </form>
+
+      <h2>Importar .voicepack</h2>
+      <form action="/packs/import" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".voicepack" required />
+        <button type="submit">Importar pack</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Librería local</h2>
+      {% if voices %}
+        {% for v in voices %}
+          <div class="card">
+            <strong>{{ v.name }}</strong><br />
+            ID: {{ v.id }}<br />
+            Tipo: {{ v.voice_type }} | Idioma: {{ v.primary_language }}<br />
+            Engine: {{ v.engine }}<br />
+            <a href="/voices/{{ v.id }}">Abrir voz</a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No hay voces todavía.</p>
+      {% endif %}
+    </section>
+  </div>
+</body>
+</html>

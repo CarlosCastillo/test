@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ voice.name }} - Voice Lab</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 1000px; }
+    input, textarea, select { width: 100%; margin-top: .3rem; margin-bottom: .8rem; }
+    .box { border: 1px solid #ddd; border-radius: .5rem; padding: 1rem; margin-bottom: 1rem; }
+    .ref { margin: .4rem 0; }
+    .inline { display: inline; }
+  </style>
+</head>
+<body>
+  <p><a href="/">← Volver</a></p>
+  <h1>{{ voice.name }}</h1>
+
+  <div class="box">
+    <h2>Metadatos</h2>
+    <form action="/voices/{{ voice.id }}/update" method="post">
+      <label>Nombre</label>
+      <input name="name" value="{{ voice.name }}" required />
+
+      <label>Descripción</label>
+      <textarea name="description">{{ voice.description }}</textarea>
+
+      <label>Tipo de voz</label>
+      <input name="voice_type" value="{{ voice.voice_type }}" />
+
+      <label>Idioma principal</label>
+      <input name="primary_language" value="{{ voice.primary_language }}" />
+
+      <label>Etiquetas (coma separadas)</label>
+      <input name="tags" value="{{ voice.tags | join(', ') }}" />
+
+      <button type="submit">Guardar cambios</button>
+    </form>
+
+    <form class="inline" action="/voices/{{ voice.id }}/delete" method="post" onsubmit="return confirm('¿Eliminar voz?');">
+      <button type="submit">Eliminar voz</button>
+    </form>
+
+    <form class="inline" action="/voices/{{ voice.id }}/export" method="post">
+      <button type="submit">Exportar .voicepack</button>
+    </form>
+
+    <p>Engine: {{ voice.engine }}</p>
+    <p>Creada: {{ voice.created_at }}</p>
+    <p>Preview path: {{ voice.preview_path or 'No definido en Iteración A' }}</p>
+  </div>
+
+  <div class="box">
+    <h2>Referencias</h2>
+    <form action="/voices/{{ voice.id }}/references" method="post" enctype="multipart/form-data">
+      <input type="file" name="files" multiple accept=".wav,.mp3,.flac,.ogg,.m4a" required />
+      <button type="submit">Agregar referencias</button>
+    </form>
+
+    {% if references %}
+      <ul>
+      {% for r in references %}
+        <li class="ref">
+          {{ r.original_name }}
+          <small>({{ r.stored_path }})</small>
+          <form class="inline" action="/references/{{ r.id }}/delete" method="post">
+            <button type="submit">Eliminar</button>
+          </form>
+        </li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <p>Sin referencias todavía.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
